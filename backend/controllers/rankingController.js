@@ -4,6 +4,8 @@ const Game = require('../models/gameModel')
 const Palpite = require('../models/palpiteModel')
 const Ranking = require('../models/rankingModel')
 const Semanal = require('../models/semanalModel')
+const Campeonato = require('../models/campeonatoModel')
+const Conquistas = require('../models/conquistasModel')
 
 const getRanking = asyncHandler(async (req, res) => {
 
@@ -135,6 +137,16 @@ const criarRanking = asyncHandler(async (req, res) => {
 
 })
 
+const hallTitulos = asyncHandler(async (req, res) => {
+
+    const semanal = await Campeonato.findOne({name: 'Semanal'})
+
+    const conquistas = await Conquistas.find({campeonato: semanal._id}).populate("user", "name imgPerfil").sort({primeiro: -1, segundo: -1, terceiro: -1})
+
+    res.status(200).json(conquistas)
+
+})
+
 cron.schedule("*/15 * * * *", function () {
     const pont = setPontuacao();
 }, {
@@ -142,5 +154,5 @@ cron.schedule("*/15 * * * *", function () {
 })
 
 module.exports = {
-    getRanking, setPontuacao, criarRanking, getRankingSemanal
+    getRanking, setPontuacao, criarRanking, getRankingSemanal, hallTitulos
 }

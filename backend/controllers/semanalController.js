@@ -129,54 +129,60 @@ const encerrarSemana = asyncHandler(async (req, res) => {
 
     if(semanal) {
         if(ranking[0]) {
-            let conquista = await Conquista.findOne({user: ranking[0].user._id, campeonato: semanal[0]._id})
-            if(conquista) {
-                let up = conquista.primeiro + 1;
-                await Conquista.bulkWrite([
-                    { updateOne: {
-                        filter: { user: ranking[0].user._id, campeonato: semanal[0]._id},
-                        update: { $set: {primeiro: up}}
-                    }}
-                ])
-            } else {
-                let up = 1;
-                let primeiro = {user: ranking[0].user._id, campeonato: semanal[0]._id, primeiro: up}
-                await Conquista.create(primeiro)
+            if(ranking[0].pontuacao !== 0) {
+                let conquista = await Conquista.findOne({user: ranking[0].user._id, campeonato: semanal[0]._id})
+                if(conquista) {
+                    let up = conquista.primeiro + 1;
+                    await Conquista.bulkWrite([
+                        { updateOne: {
+                            filter: { user: ranking[0].user._id, campeonato: semanal[0]._id},
+                            update: { $set: {primeiro: up}}
+                        }}
+                    ])
+                } else {
+                    let up = 1;
+                    let primeiro = {user: ranking[0].user._id, campeonato: semanal[0]._id, primeiro: up}
+                    await Conquista.create(primeiro)
+                }
             }
             
         }
     
         if(ranking[1]) {
-            let conquista = await Conquista.findOne({user: ranking[1].user._id, campeonato: semanal[0]._id})
-            if(conquista) {
-                let up = conquista.segundo + 1;
-                await Conquista.bulkWrite([
-                    { updateOne: {
-                        filter: { user: ranking[1].user._id, campeonato: semanal[0]._id},
-                        update: { $set: {segundo: up}}
-                    }}
-                ])
-            } else {
-                let up = 1;
-                let segundo = {user: ranking[1].user._id, campeonato: semanal[0]._id, segundo: up}
-                await Conquista.create(segundo)
+            if(ranking[1].pontuacao !== 0) {
+                let conquista = await Conquista.findOne({user: ranking[1].user._id, campeonato: semanal[0]._id})
+                if(conquista) {
+                    let up = conquista.segundo + 1;
+                    await Conquista.bulkWrite([
+                        { updateOne: {
+                            filter: { user: ranking[1].user._id, campeonato: semanal[0]._id},
+                            update: { $set: {segundo: up}}
+                        }}
+                    ])
+                } else {
+                    let up = 1;
+                    let segundo = {user: ranking[1].user._id, campeonato: semanal[0]._id, segundo: up}
+                    await Conquista.create(segundo)
+                }
             }
         }
     
         if(ranking[2]) {
-            let conquista = await Conquista.findOne({user: ranking[2].user._id, campeonato: semanal[0]._id})
-            if(conquista) {
-                let up = conquista.terceiro + 1;
-                await Conquista.bulkWrite( [
-                    { updateOne: {
-                        filter: { user: ranking[2].user._id, campeonato: semanal[0]._id},
-                        update: { $set: {terceiro: up}}
-                    }}
-                ])
-            } else {
-                let up = 1;
-                let terceiro = {user: ranking[2].user._id, campeonato: semanal[0]._id, terceiro: up}
-                await Conquista.create(terceiro)
+            if(ranking[2].pontuacao !== 0) {
+                let conquista = await Conquista.findOne({user: ranking[2].user._id, campeonato: semanal[0]._id})
+                if(conquista) {
+                    let up = conquista.terceiro + 1;
+                    await Conquista.bulkWrite( [
+                        { updateOne: {
+                            filter: { user: ranking[2].user._id, campeonato: semanal[0]._id},
+                            update: { $set: {terceiro: up}}
+                        }}
+                    ])
+                } else {
+                    let up = 1;
+                    let terceiro = {user: ranking[2].user._id, campeonato: semanal[0]._id, terceiro: up}
+                    await Conquista.create(terceiro)
+                }
             }
         }
     }

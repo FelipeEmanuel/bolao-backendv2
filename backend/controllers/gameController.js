@@ -3,15 +3,78 @@ const Game = require('../models/gameModel')
 const Palpite = require('../models/palpiteModel')
 const Times = require('../models/timesModel')
 const Competicao = require('../models/competicaoModel')
+const { getCompeticoesPorCategoria } = require('./competicaoController')
+
+const getGamesPorCategoria = async (categoria, ativo = null, semanal = null, dataInicio = null, dataFim = null) => {
+    // Constrói o filtro match dinamicamente
+    const match = {
+        'campeonato.categoria': categoria
+    };
+
+    if (ativo !== null) {
+        match.ativo = ativo;
+    }
+
+    if (semanal !== null) {
+        match.semanal = semanal;
+    }
+
+    if (dataInicio !== null && dataFim !== null) {
+        match.dataLimite = { $gte: dataInicio, $lte: dataFim };
+    }
+
+    return await Game.aggregate([
+        {
+            $lookup: {
+                from: 'competicaos', // nome da coleção de competições
+                localField: 'competicao',
+                foreignField: '_id',
+                as: 'competicao'
+            }
+        },
+        {
+            $unwind: '$competicao'
+        },
+        {
+            $lookup: {
+                from: 'campeonatos', // nome da coleção de campeonatos
+                localField: 'competicao.campeonato',
+                foreignField: '_id',
+                as: 'campeonato'
+            }
+        },
+        {
+            $unwind: '$campeonato'
+        },
+        {
+            $match: match // Aplica o filtro construído dinamicamente
+        },
+        {
+            $sort: {
+                'createdAt': -1
+            }
+        },
+        {
+            $limit: 100
+        }
+    ]);
+};
 
 const getGames = asyncHandler(async (req, res) => {
-    const games = await Game.find().sort({'createdAt': -1}).limit(100)
+    //const gamesFutebol = await Game.find({categoria: "Futebol"}).sort({'createdAt': -1}).limit(100)
+    const gamesFutebol = await getGamesPorCategoria('Futebol');
+
+    const gamesEsports = await getGamesPorCategoria('Esports');
 
     const escudosFutebol = await Times.find({categoria: "Futebol", ativo: true})
 
-    const competicoes = await Competicao.find({ativa: true})
+    const escudosEsports = await Times.find({categoria: "Esports", ativo: true})
 
-    res.status(200).json({games, escudosFutebol, competicoes})
+    const competicoesFutebol = await getCompeticoesPorCategoria('Futebol', true);
+
+    const competicoesEsports = await getCompeticoesPorCategoria('Esports', true);
+
+    res.status(200).json({gamesFutebol, gamesEsports, escudosFutebol, escudosEsports, competicoesFutebol, competicoesEsports})
 })
 
 const getGameById = asyncHandler(async (req, res) => {
@@ -28,7 +91,7 @@ const getGameById = asyncHandler(async (req, res) => {
 
 const setGames = asyncHandler(async (req, res) => {
 
-    const {time1, time2, placar1, placar2, competicao, dataLimite, isocodetime1, isocodetime2, infoCamp, infoJogo, infoGroup, gameType} = req.body
+    const {time1, time2, placar1, placar2, competicao, dataLimite, isocodetime1, isocodetime2, infoCamp, infoJogo, infoGroup, gameType, modelo} = req.body
 
     if (!time1 || !time2) {
         res.status(400)
@@ -40,7 +103,7 @@ const setGames = asyncHandler(async (req, res) => {
         user: req.user.id, competicao, 
         time1, time2, placar1, placar2,
         dataLimite, isocodetime1, isocodetime2, 
-        infoCamp, infoJogo, infoGroup, gameType
+        infoCamp, infoJogo, infoGroup, gameType, modelo
     })
 
     res.status(200).json(game)
@@ -92,5 +155,5 @@ const deleteGame = asyncHandler(async (req, res) => {
 })
 
 module.exports = {
-    getGames, getGameById, setGames, updateGame, deleteGame
+    getGames, getGameById, setGames, updateGame, deleteGame, getGamesPorCategoria
 }
