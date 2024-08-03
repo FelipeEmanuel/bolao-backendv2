@@ -15,6 +15,7 @@ const setPalpite = asyncHandler(async (req, res) => {
     let palpite = req.body;
     let user = req.user.id;
     const getUser = true;
+    let userInfo = await User.findOne({_id: user})
 
     if (!palpite) {
         res.status(400);
@@ -51,90 +52,37 @@ const setPalpite = asyncHandler(async (req, res) => {
     let semanalCreate = { user: user, campeonato: semanal._id };
     let obj = { user: user, jogo: palpite.jogo_id, competicao: palpite.competicao, palpite1: palpite.palpite1, palpite2: palpite.palpite2 };
     let instancia = { user: user, competicao: palpite.competicao };
-
+    
+    
     // Verifica se o jogo está dentro do prazo para palpitar
     if (jogoAtual.dataLimite < jogoDisponivel) {
         res.status(400);
         throw new Error('Já passou da hora de palpitar nesse aqui parça');
     }
-
+    
     if (palpiteEncontrado) {
         // Atualiza o palpite existente
         await Palpite.findByIdAndUpdate(palpiteEncontrado._id, obj);
     } else {
         // Cria um novo palpite se não houver palpite existente
         await Palpite.create(obj);
-        
         // Cria o ranking se ainda não existir
         if (!ranking && userInfo.role === 'user') {
+            
             await Ranking.create(instancia);
         }
     }
-
+    
     // Verifica e cria o registro semanal se necessário
     if (!semanal2 && userInfo.role === 'user') {
         await Semanal.create(semanalCreate);
     }
-
+    
     // Atualiza o status do usuário
-    await User.findByIdAndUpdate(user, { palpitou: getUser });
+    await User.findByIdAndUpdate(user, { palpitou: getUser })
 
     res.status(200).json(obj);
 
-  /*let palpite = req.body
-    let user = req.user.id
-    const getUser = true
-
-    if(!palpite) {
-        res.status(400)
-        throw new Error('Please add all text fields')
-    }
-
-    const jogoDisponivel = getDate();
-    let palpiteEncontrado = await Palpite.findOne({jogo: palpite.jogo_id, user: req.user.id})
-    let ranking = await Ranking.findOne({user: req.user.id, competicao: palpite.competicao})
-    let userInfo = await User.findById(user)
-    let semanal = await Campeonato.findOne({name: 'Semanal'})
-    let semanal2 = await Semanal.findOne({user: req.user.id, campeonato: semanal._id})
-    let semanalCreate = {user: req.user.id, campeonato: semanal._id}
-    let obj = {user: req.user.id, jogo: palpite.jogo_id, competicao: palpite.competicao, palpite1: palpite.palpite1, palpite2: palpite.palpite2} 
-    let jogoAtual = await Game.findById(obj.jogo)
-    let instancia = {user: req.user.id, competicao: palpite.competicao}
-   
-    if(jogoAtual.dataLimite >= jogoDisponivel) {
-        if(palpiteEncontrado) {   
-            if(user === palpiteEncontrado.user.toString()){
-                await User.findByIdAndUpdate(user, {palpitou: getUser}) 
-                await Palpite.findByIdAndUpdate(palpiteEncontrado.id, obj)
-                if(!semanal2 && userInfo.role == 'user') {
-                    await Semanal.create(semanalCreate)
-                }
-            } else {
-                if(!ranking && userInfo.role == 'user') {
-                    await Ranking.create(instancia)
-                }
-                if(!semanal2 && userInfo.role == 'user') {
-                    await Semanal.create(semanalCreate)
-                }
-                await User.findByIdAndUpdate(user, {palpitou: getUser})    
-                await Palpite.create(obj)
-            }    
-        } else {
-            if(!ranking && userInfo.role === 'user') {
-                await Ranking.create(instancia)  
-            }
-            if(!semanal2 && userInfo.role == 'user') {
-                await Semanal.create(semanalCreate)
-            }
-            await User.findByIdAndUpdate(user, {palpitou: getUser}) 
-            await Palpite.create(obj)
-        }
-    } else {
-        res.status(400)
-        throw new Error('Já passou da hora de palpitar nesse aqui parça')
-    }   
-    
-    res.status(200).json(obj)*/
 });
 
 const getPalpitesFutebol = asyncHandler(async (req, res) => {
